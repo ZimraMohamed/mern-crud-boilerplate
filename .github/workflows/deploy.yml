@@ -8,33 +8,41 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Update EC2
-        uses: appleboy/ssh-action@master
+      - name: Fresh Deployment to EC2
+        uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # 1. Enter the project
-            cd ~/mern-crud-boilerplate
+            # 1. Enter project and wipe local changes
+            cd ~/mern-crud-boilerplate || exit
+            git fetch --all
+            git reset --hard origin/deploy
             
-            # 2. Get latest code
-            git pull origin deploy
-            
-            # 3. Build Frontend
+            # 2. Fresh Frontend Build
             cd frontend
+            echo "Clearing old frontend build and modules..."
+            rm -rf node_modules dist
+            npm cache clean --force
             npm install
             npm run build
             
-            # 4. Move Dist to Nginx Root
-            # We use sudo because /var/www/ is usually owned by root
+            # 3. Clean and Sync Nginx Root
+            echo "Deploying to Nginx web root..."
+            sudo mkdir -p /var/www/pdsa-frontend
             sudo rm -rf /var/www/pdsa-frontend/*
             sudo cp -r dist/* /var/www/pdsa-frontend/
+            sudo chown -R ubuntu:ubuntu /var/www/pdsa-frontend
             
-            # # 5. Refresh Backend
+            # # 4. Fresh Backend Start
             # cd ../backend
+            # echo "Clearing old backend modules..."
+            # rm -rf node_modules
             # npm install
+            # # Restart backend or start if first time
             # pm2 restart mern-backend || pm2 start server.js --name "mern-backend"
             
-            # 6. Final Nginx Refresh
-            sudo systemctl restart nginx
+            # 5. Final Server Cleanup & Refresh
+            sudo nginx -t && sudo systemctl restart nginx
+            echo "Fresh deployment complete!"
