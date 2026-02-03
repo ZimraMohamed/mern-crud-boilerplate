@@ -102,8 +102,10 @@ jobs:
             
             # 2. Project Clean
             cd ~/mern-crud-boilerplate || exit
-            git fetch --all
-            git reset --hard origin/deploy
+            # git fetch --all
+            # git reset --hard origin/deploy
+            git checkout deploy
+            git pull origin deploy
             
             # 3. Frontend: Absolute Fresh Start
             cd frontend
