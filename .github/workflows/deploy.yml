@@ -26,7 +26,15 @@ jobs:
             npm install
             npm run build
             
-            # 4. Refresh Backend
+            # 4. Move Dist to Nginx Root
+            # We use sudo because /var/www/ is usually owned by root
+            sudo rm -rf /var/www/pdsa-frontend/*
+            sudo cp -r dist/* /var/www/pdsa-frontend/
+            
+            # 5. Refresh Backend
             cd ../backend
             npm install
             pm2 restart mern-backend || pm2 start server.js --name "mern-backend"
+            
+            # 6. Final Nginx Refresh
+            sudo systemctl restart nginx
