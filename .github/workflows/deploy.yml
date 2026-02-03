@@ -15,61 +15,46 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # 1. Error Handling & System Cleanup
             set -e 
-            echo "Cleaning Ubuntu system cache..."
-            sudo sync && echo 3 | sudo tee /proc/sys/vm/drop_caches
-            
-            # # 2. Force Git to match GitHub exactly
-            # cd ~/mern-crud-boilerplate || exit
-            # echo "Fetching latest code from GitHub..."
-            # git fetch --all
-            # git reset --hard origin/deploy
 
-            # 2. Force Git to match GitHub exactly
+            # 1. Recovery: Force Git to redownload what you deleted
             cd ~/mern-crud-boilerplate || exit
-            echo "Fetching latest code from GitHub..."
-            git remote set-branches origin 'deploy'
-            git fetch --all
-            
-            echo "Switching to deploy branch..."
-            # This ensures we are on the branch and it's tracking origin/deploy
-            git checkout -B deploy origin/deploy || git checkout deploy
-            
-            echo "Resetting to match origin..."
+            echo "Repairing repository and fetching latest code..."
+            git fetch origin deploy
             git reset --hard origin/deploy
             
-            # 3. Navigate to Frontend (Handles both subfolder and root structures)
+            # 2. Enter Frontend (Now files are back)
             if [ -d "frontend" ]; then
               cd frontend
             fi
 
-            echo "Current Directory: $(pwd)"
-            
-            # 4. Fresh Build Process
-            echo "Removing old modules and building..."
-            rm -rf node_modules dist
+            echo "Verified files in $(pwd):"
+            ls -F
+
+            # 3. Fresh Build
+            echo "Installing dependencies..."
             npm install
+            
+            echo "Building Vite project..."
             npm run build
             
-            # 5. Sync to Nginx Web Root
-            echo "Deploying to /var/www/pdsa-frontend..."
+            # 4. Final Deploy to Nginx
+            # Nginx is looking at /var/www/pdsa-frontend
+            echo "Deploying to Nginx web root..."
             sudo mkdir -p /var/www/pdsa-frontend
             sudo rm -rf /var/www/pdsa-frontend/*
             
             if [ -d "dist" ]; then
               sudo cp -r dist/* /var/www/pdsa-frontend/
+              echo "Files copied to /var/www/pdsa-frontend successfully."
             else
-              echo "Error: Build failed, dist folder not found!"
+              echo "ERROR: dist folder was not created! Check npm run build output above."
               exit 1
             fi
 
-            # 6. Final Permissions & Nginx Restart
+            # 5. Permissions and Restart
             sudo chown -R ubuntu:ubuntu /var/www/pdsa-frontend
             sudo chmod -R 755 /var/www/pdsa-frontend
+            sudo nginx -t && sudo systemctl restart nginx
             
-            echo "Testing Nginx configuration..."
-            sudo nginx -t
-            sudo systemctl restart nginx
-            
-            echo "Deployment Successful!"
+            echo "Deployment Successful!"ss
