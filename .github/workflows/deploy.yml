@@ -38,3 +38,4 @@ jobs:
             
             # 6. Final Nginx Refresh
             sudo systemctl restart nginx
+            sudo systemctl restart nginx
