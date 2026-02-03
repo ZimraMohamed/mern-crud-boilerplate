@@ -1,52 +1,3 @@
-# name: Auto Deploy
-# on:
-#   push:
-#     branches:
-#       - deploy
-
-# jobs:
-#   deploy:
-#     runs-on: ubuntu-latest
-#     steps:
-#       - name: Fresh Deployment to EC2
-#         uses: appleboy/ssh-action@v1.0.3
-#         with:
-#           host: ${{ secrets.EC2_HOST }}
-#           username: ubuntu
-#           key: ${{ secrets.EC2_SSH_KEY }}
-#           script: |
-#             # 1. Enter project and wipe local changes
-#             cd ~/mern-crud-boilerplate || exit
-#             git fetch --all
-#             git reset --hard origin/deploy
-            
-#             # 2. Fresh Frontend Build
-#             cd frontend
-#             echo "Clearing old frontend build and modules..."
-#             rm -rf node_modules dist
-#             npm cache clean --force
-#             npm install
-#             npm run build
-            
-#             # 3. Clean and Sync Nginx Root
-#             echo "Deploying to Nginx web root..."
-#             sudo mkdir -p /var/www/pdsa-frontend
-#             sudo rm -rf /var/www/pdsa-frontend/*
-#             sudo cp -r dist/* /var/www/pdsa-frontend/
-#             sudo chown -R ubuntu:ubuntu /var/www/pdsa-frontend
-            
-#             # # 4. Fresh Backend Start
-#             # cd ../backend
-#             # echo "Clearing old backend modules..."
-#             # rm -rf node_modules
-#             # npm install
-#             # # Restart backend or start if first time
-#             # pm2 restart mern-backend || pm2 start server.js --name "mern-backend"
-            
-#             # 5. Final Server Cleanup & Refresh
-#             sudo nginx -t && sudo systemctl restart nginx
-#             echo "Fresh deployment complete!"
-
 name: Auto Deploy
 on:
   push:
@@ -57,23 +8,73 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Test Deployment to EC2
+      - name: Fresh Deployment to EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # 1. Prepare the directory
+            # 1. Enter project and wipe local changes
+            cd ~/mern-crud-boilerplate || exit
+            git fetch --all
+            git reset --hard origin/deploy
+            
+            # 2. Fresh Frontend Build
+            cd frontend
+            echo "Clearing old frontend build and modules..."
+            rm -rf node_modules dist
+            npm cache clean --force
+            npm install
+            npm run build
+            
+            # 3. Clean and Sync Nginx Root
+            echo "Deploying to Nginx web root..."
             sudo mkdir -p /var/www/pdsa-frontend
+            sudo rm -rf /var/www/pdsa-frontend/*
+            sudo cp -r dist/* /var/www/pdsa-frontend/
             sudo chown -R ubuntu:ubuntu /var/www/pdsa-frontend
             
-            # 2. Delete everything inside to be fresh
-            rm -rf /var/www/pdsa-frontend/*
+            # # 4. Fresh Backend Start
+            # cd ../backend
+            # echo "Clearing old backend modules..."
+            # rm -rf node_modules
+            # npm install
+            # # Restart backend or start if first time
+            # pm2 restart mern-backend || pm2 start server.js --name "mern-backend"
             
-            # 3. Create a simple testing HTML file
-            echo "<html><body><h1>Deployment Test Successful</h1><p>The server at 13.233.85.178 is now correctly serving files via Nginx.</p></body></html>" > /var/www/pdsa-frontend/index.html
-            
-            # 4. Final Server Refresh
+            # 5. Final Server Cleanup & Refresh
             sudo nginx -t && sudo systemctl restart nginx
-            echo "Test deployment complete! Check your browser."
+            echo "Fresh deployment complete!"
+
+
+# name: Auto Deploy
+# on:
+#   push:
+#     branches:
+#       - deploy
+
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Test Deployment to EC2
+#         uses: appleboy/ssh-action@v1.0.3
+#         with:
+#           host: ${{ secrets.EC2_HOST }}
+#           username: ubuntu
+#           key: ${{ secrets.EC2_SSH_KEY }}
+#           script: |
+#             # 1. Prepare the directory
+#             sudo mkdir -p /var/www/pdsa-frontend
+#             sudo chown -R ubuntu:ubuntu /var/www/pdsa-frontend
+            
+#             # 2. Delete everything inside to be fresh
+#             rm -rf /var/www/pdsa-frontend/*
+            
+#             # 3. Create a simple testing HTML file
+#             echo "<html><body><h1>Deployment Test Successful</h1><p>The server at 13.233.85.178 is now correctly serving files via Nginx.</p></body></html>" > /var/www/pdsa-frontend/index.html
+            
+#             # 4. Final Server Refresh
+#             sudo nginx -t && sudo systemctl restart nginx
+#             echo "Test deployment complete! Check your browser."
