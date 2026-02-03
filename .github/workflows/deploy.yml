@@ -20,10 +20,23 @@ jobs:
             echo "Cleaning Ubuntu system cache..."
             sudo sync && echo 3 | sudo tee /proc/sys/vm/drop_caches
             
+            # # 2. Force Git to match GitHub exactly
+            # cd ~/mern-crud-boilerplate || exit
+            # echo "Fetching latest code from GitHub..."
+            # git fetch --all
+            # git reset --hard origin/deploy
+
             # 2. Force Git to match GitHub exactly
             cd ~/mern-crud-boilerplate || exit
             echo "Fetching latest code from GitHub..."
+            git remote set-branches origin 'deploy'
             git fetch --all
+            
+            echo "Switching to deploy branch..."
+            # This ensures we are on the branch and it's tracking origin/deploy
+            git checkout -B deploy origin/deploy || git checkout deploy
+            
+            echo "Resetting to match origin..."
             git reset --hard origin/deploy
             
             # 3. Navigate to Frontend (Handles both subfolder and root structures)
