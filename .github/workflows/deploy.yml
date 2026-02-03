@@ -15,48 +15,48 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            # Exit immediately if a command fails
+            # 1. Error Handling & System Cleanup
             set -e 
-
             echo "Cleaning Ubuntu system cache..."
             sudo sync && echo 3 | sudo tee /proc/sys/vm/drop_caches
             
-            # 1. Enter project and Force Sync
+            # 2. Force Git to match GitHub exactly
             cd ~/mern-crud-boilerplate || exit
-            git fetch origin deploy
+            echo "Fetching latest code from GitHub..."
+            git fetch --all
             git reset --hard origin/deploy
             
-            # 2. Frontend Build with Path Check
-            # We check if frontend folder exists; if not, we assume we are in it.
+            # 3. Navigate to Frontend (Handles both subfolder and root structures)
             if [ -d "frontend" ]; then
               cd frontend
             fi
 
             echo "Current Directory: $(pwd)"
-            echo "Checking for package.json..."
-            ls -la package.json
-
-            echo "Removing node_modules and clearing NPM cache..."
+            
+            # 4. Fresh Build Process
+            echo "Removing old modules and building..."
             rm -rf node_modules dist
-            npm cache clean --force
             npm install
             npm run build
             
-            # 3. Clean and Sync Nginx Root
-            echo "Deploying to Nginx web root..."
+            # 5. Sync to Nginx Web Root
+            echo "Deploying to /var/www/pdsa-frontend..."
+            sudo mkdir -p /var/www/pdsa-frontend
             sudo rm -rf /var/www/pdsa-frontend/*
             
-            # Check if dist was actually created
             if [ -d "dist" ]; then
               sudo cp -r dist/* /var/www/pdsa-frontend/
             else
-              echo "Error: dist folder not found!"
+              echo "Error: Build failed, dist folder not found!"
               exit 1
             fi
 
+            # 6. Final Permissions & Nginx Restart
             sudo chown -R ubuntu:ubuntu /var/www/pdsa-frontend
+            sudo chmod -R 755 /var/www/pdsa-frontend
             
-            # 4. Verify and Restart Nginx
-            sudo nginx -t && sudo systemctl restart nginx
+            echo "Testing Nginx configuration..."
+            sudo nginx -t
+            sudo systemctl restart nginx
             
-            echo "Deployment successful!"
+            echo "Deployment Successful!"
