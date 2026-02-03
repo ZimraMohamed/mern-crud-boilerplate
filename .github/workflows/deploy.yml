@@ -15,46 +15,59 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            # 1. Error Handling
             set -e 
 
-            # 1. Recovery: Force Git to redownload what you deleted
+            # 2. Project Recovery & Git Sync
+            # We enter the folder and force Git to re-link to GitHub
             cd ~/mern-crud-boilerplate || exit
-            echo "Repairing repository and fetching latest code..."
-            git fetch origin deploy
-            git reset --hard origin/deploy
             
-            # 2. Enter Frontend (Now files are back)
+            echo "Refreshing Git Remote..."
+            git remote remove origin || true
+            git remote add origin https://github.com/ZimraMohamed/mern-crud-boilerplate.git
+            
+            echo "Fetching 'deploy' branch..."
+            git fetch origin deploy
+            
+            echo "Restoring deleted files (Hard Reset)..."
+            git reset --hard FETCH_HEAD
+            
+            # 3. Navigate to Frontend
             if [ -d "frontend" ]; then
               cd frontend
             fi
 
-            echo "Verified files in $(pwd):"
+            echo "Current files in $(pwd):"
             ls -F
 
-            # 3. Fresh Build
-            echo "Installing dependencies..."
+            # 4. Fresh Build Process
+            echo "Installing dependencies (this may take a minute)..."
             npm install
             
-            echo "Building Vite project..."
+            echo "Running npm build..."
             npm run build
             
-            # 4. Final Deploy to Nginx
-            # Nginx is looking at /var/www/pdsa-frontend
-            echo "Deploying to Nginx web root..."
+            # 5. Sync to Nginx Web Root
+            echo "Deploying to /var/www/pdsa-frontend..."
             sudo mkdir -p /var/www/pdsa-frontend
             sudo rm -rf /var/www/pdsa-frontend/*
             
+            # Handles both 'dist' (Vite) and 'build' (CRA)
             if [ -d "dist" ]; then
               sudo cp -r dist/* /var/www/pdsa-frontend/
-              echo "Files copied to /var/www/pdsa-frontend successfully."
+            elif [ -d "build" ]; then
+              sudo cp -r build/* /var/www/pdsa-frontend/
             else
-              echo "ERROR: dist folder was not created! Check npm run build output above."
+              echo "Error: Build output folder not found!"
               exit 1
             fi
 
-            # 5. Permissions and Restart
+            # 6. Final Permissions & Nginx Restart
             sudo chown -R ubuntu:ubuntu /var/www/pdsa-frontend
             sudo chmod -R 755 /var/www/pdsa-frontend
-            sudo nginx -t && sudo systemctl restart nginx
             
-            echo "Deployment Successful!"ss
+            echo "Verifying Nginx and Restarting..."
+            sudo nginx -t
+            sudo systemctl restart nginx
+            
+            echo "Deployment Successful! Your site is live."
