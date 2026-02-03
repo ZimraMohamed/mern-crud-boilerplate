@@ -28,6 +28,7 @@ jobs:
             
             echo "Fetching 'deploy' branch..."
             git fetch origin deploy
+            # 
             
             echo "Restoring deleted files (Hard Reset)..."
             git reset --hard FETCH_HEAD
