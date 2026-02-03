@@ -7,8 +7,10 @@ export default function App() {
   const [editId, setEditId] = useState(null);
 
   return (
-    <div>
-      <h1>CRUD Boilerplate (Vite & React)</h1>
+    <div className="container mt-5">
+      <div className="mb-4">
+        <h1 className="text-center text-primary">CRUD Boilerplate (Vite & React)</h1>
+      </div>
       <ItemForm selectedId={editId} onSaved={() => setEditId(null)} />
       <ItemList onEdit={setEditId} />
     </div>

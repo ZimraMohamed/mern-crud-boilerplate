@@ -1,0 +1,32 @@
+name: Auto Deploy
+on:
+  push:
+    branches:
+      - deploy
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # 1. Enter the project
+            cd ~/mern-crud-boilerplate
+            
+            # 2. Get latest code
+            git pull origin deploy
+            
+            # 3. Build Frontend
+            cd frontend
+            npm install
+            npm run build
+            
+            # 4. Refresh Backend
+            cd ../backend
+            npm install
+            pm2 restart mern-backend || pm2 start server.js --name "mern-backend"

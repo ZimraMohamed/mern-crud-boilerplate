@@ -1,6 +1,7 @@
-const express = require('express');
+import express from 'express';
+import * as ctrl from '../controllers/item.controller.js';
+
 const router = express.Router();
-const ctrl = require('../controllers/itemController');
 
 router.route('/')
   .get(ctrl.getItems)
@@ -11,4 +12,4 @@ router.route('/:id')
   .put(ctrl.updateItem)
   .delete(ctrl.deleteItem);
 
-module.exports = router;
+export default router;
