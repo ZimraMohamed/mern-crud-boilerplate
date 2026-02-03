@@ -31,10 +31,10 @@ jobs:
             sudo rm -rf /var/www/pdsa-frontend/*
             sudo cp -r dist/* /var/www/pdsa-frontend/
             
-            # 5. Refresh Backend
-            cd ../backend
-            npm install
-            pm2 restart mern-backend || pm2 start server.js --name "mern-backend"
+            # # 5. Refresh Backend
+            # cd ../backend
+            # npm install
+            # pm2 restart mern-backend || pm2 start server.js --name "mern-backend"
             
             # 6. Final Nginx Refresh
             sudo systemctl restart nginx
