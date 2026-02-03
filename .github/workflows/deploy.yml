@@ -1,4 +1,4 @@
-name: Auto Deploy
+name: React Deployment to EC2
 on:
   push:
     branches:
