@@ -9,7 +9,7 @@ export default function App() {
   return (
     <div className="container mt-5">
       <div className="mb-4">
-        <h1 className="text-center text-primary">CRUD Boilerplate (Vite & React)</h1>
+        <h1 className="text-center text-primary">CRUD Boilerplafjskdfnjksdfnksjte (Vite & React)</h1>
       </div>
       <ItemForm selectedId={editId} onSaved={() => setEditId(null)} />
       <ItemList onEdit={setEditId} />
